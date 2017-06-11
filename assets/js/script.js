@@ -1,121 +1,91 @@
-
-/** Custom function */
-urlParam = function(name) {
-    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
-    if (results == null) {
-        return null;
-    } else {
-        return results[1] || 0;
+/**
+ * Check the page is visible or hidden (tab is active or inactive)
+ */
+var vis = (function(){
+    var stateKey, eventKey, keys = {
+        hidden: "visibilitychange",
+        webkitHidden: "webkitvisibilitychange",
+        mozHidden: "mozvisibilitychange",
+        msHidden: "msvisibilitychange"
+    };
+    for (stateKey in keys) {
+        if (stateKey in document) {
+            eventKey = keys[stateKey];
+            break;
+        }
     }
-}
-
-getKeywords = function(param) {
-    param = param.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-    param = param.replace(/\\u[\dA-F]{4}/gi, function(match) {
-        return String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16));
-    });
-    return param;
-}
-/*********************/
-
-var q = urlParam('q');
-var lowPrice = urlParam('low-price');
-var highPrice = urlParam('high-price');
-
-if (q !== null && typeof(q) !== 'undefined' && q != 0) {
-    var searchVal = decodeURIComponent(q.replace(/\+/g, ' '));
-    $('#keywords').html(searchVal);
-    $('#search-form-input').val(searchVal);
-
-    var priceFilter = false;
-
-    if (!(isNaN(parseFloat(lowPrice)) || isNaN(parseFloat(highPrice)))) {
-
-        priceFilter = true;
-
-        lowPrice  = parseFloat(lowPrice);
-        highPrice = (highPrice != 0) ? parseFloat(highPrice) : '';
-
-        $('#low-price').val(lowPrice);
-        $('#high-price').val(highPrice);
-
-        var priceRange = (highPrice != '') ? (lowPrice + ' - ' + highPrice) : ('from ' + lowPrice);
-        $('#price-range').html(priceRange);
-
+    return function(c) {
+        if (c) document.addEventListener(eventKey, c);
+        return !document[stateKey];
     }
+})();
 
+/**
+ * Fetch data from json file
+ */
+function fetchData() {
     $.ajax( {
-        url: "https://raw.githubusercontent.com/kienle83/search/master/data/data.json",
+        url: "https://raw.githubusercontent.com/kienle83/centerpage/master/data/data.json",
         type: 'GET',
-        success: function(data) {
-            var parsed = JSON.parse(data),
-                tours = parsed.tours,
-                results = [];
+        success: function( data ) {
+            var parsed = JSON.parse(data);
+            //var timestamp = "2017-06-08T21:34:39.244341+00:00";
+            var timestamp = "2017-06-09T21:34:39.244341+00:00";
 
-            for (var i = 0 ; i < tours.length ; i++)
-            {
-                var title = tours[i].title;
-                var price = tours[i].price;
-
-                title = getKeywords(title);
-                price = parseFloat(price);
-
-                if (priceFilter) {
-                    if (highPrice != '') {
-                        if (title.toLowerCase().indexOf(searchVal.toLowerCase()) >= 0 && (lowPrice <= price && price <= highPrice)) {
-                            results.push(tours[i]);
-                        }
-                    } else if (title.toLowerCase().indexOf(searchVal.toLowerCase()) >= 0 && lowPrice <= price) {
-                        results.push(tours[i]);
-                    }
-                } else if (title.toLowerCase().indexOf(searchVal.toLowerCase()) >= 0) {
-                    results.push(tours[i]);
-                }
+            if (parsed.last_published_semantic && timestamp !== parsed.last_published_semantic) {
+                //console.log(parsed.last_published_semantic);
+                showOverlay();
             }
-
-            var html  = '',
-                count = results.length;
-
-            for (var j = 0; j < count; j++) {
-                html += '<div class="card"><div class="card-block"><h4 class="card-title">' + results[j].title + '</h4><h6 class="card-subtitle mb-2 text-muted">Rating: ' + results[j].rating + '</h6><p class="card-text">Price: ' + results[j].price + ' ' + results[j].currency + '</p><a href="#" class="card-link">See more</a></div></div>';
-            }
-
-            $('#result-count').text(count);
-            $('#result-box').html(html);
+        },
+        error: function() {
+            console.log("error");
+            //setTimeout();
         }
     });
 }
 
-$('#search-form-input').autocomplete({
-    source: function(request, response) {
-        $.ajax( {
-            url: "https://raw.githubusercontent.com/kienle83/search/master/data/data.json",
-            type: 'GET',
-            success: function(data) {
-                var parsed = JSON.parse(data),
-                    tours = parsed.tours,
-                    results = [],
-                    searchVal = request.term;
+/**
+ * Show overlay
+ */
+function showOverlay() {
 
-                for (var i = 0 ; i < tours.length ; i++)
-                {
-                    var title = tours[i].title;
-                    title = getKeywords(title);
+    var $overlayWrapper = $("#overlay-wrapper");
 
-                    if (title.toLowerCase().indexOf(searchVal.toLowerCase()) >= 0) {
-                        results.push(title);
-                    }
+    if ($overlayWrapper.not(":visible")) {
+        $( "#overlay-wrapper" ).dialog({
+            resizable: false,
+            height: "auto",
+            width: 400,
+            modal: true,
+            buttons: {
+                "Neu laden": function() {
+                    location.reload();
+                    //$( this ).dialog( "close" );
+                },
+                "Abbrechen": function() {
+                    $( this ).dialog( "close" );
                 }
-
-                if (results.length >= 5)
-                    results = results.slice(0, 5);
-
-                response(results);
             }
         });
-    },
-    select: function( event, ui ) {
-        $('#search-form-input').val(ui.item.value);
-        $('#search-header').submit();
     }
+
+}
+
+
+/**
+ * Bind events depend on visible/hidden page
+ */
+vis(function(){
+
+    if (vis()) {
+        console.log("document is visible");
+        document.title = 'Visible';
+        //bindResetEvents();
+        fetchData();
+    } else {
+        console.log("document is hidden");
+        document.title = 'Not visible';
+        //unbindResetEvents();
+    }
+
 });
