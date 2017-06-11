@@ -2,12 +2,6 @@ body {
     font-family: "TabletGothic", "Helvetica Neue", Helvetica, Arial, FreeSans, sans-serif;
     font-size: 1em
 }
-hr {
-    -webkit-box-sizing: content-box;
-    box-sizing: content-box;
-    height: 0;
-    overflow: visible
-}
 #overlay-wrapper {
     display: none
 }
@@ -15,7 +9,7 @@ hr {
 .container--white {
     background-color: white;
     padding-top: 0.938em; /* 15px */
-    padding-bottom: 0.938px
+    padding-bottom: 0.938em
 }
 .container--white a:hover {
     text-decoration: none
@@ -31,7 +25,7 @@ hr {
     font-weight: bold;
     letter-spacing: -0.15rem;
     width: 70%;
-    color: black;
+    color: #000;
     line-height: 1.25em
 }
 .teaser__title-bg {
@@ -46,7 +40,7 @@ hr {
     margin-top: -2.5em
 }
 .teaser__kicker--blue {
-    color: blue
+    color: #00F
 }
 .teaser__kicker-bg {
     display: inline;
@@ -55,15 +49,15 @@ hr {
 }
 .teaser__text {
     width: 95%;
-    color: black
+    color: #000
 }
 .teaser__text-comment {
-    color: grey;
+    color: #888;
     width: 95%;
     margin-top: 0.938em
 }
 .teaser__link-text {
-    border-bottom: 1px solid grey
+    border-bottom: 1px solid #888
 }
 
 /** max-width: 768px */
@@ -72,7 +66,7 @@ hr {
         margin-bottom: 0.938em
     }
     .teaser:last-child {
-        margin-bottom: 0;
+        margin-bottom: 0
     }
     .teaser__title {
         font-size: 1.70rem;
